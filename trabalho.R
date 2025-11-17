@@ -69,9 +69,33 @@ gg_miss_var(x = base,
 
 # Assumindo nível de significância de 5%
 
+# Histograma do score de periculosidade com curva de densidade Normal sobreposta
+media <- mean(x = base$score_periculosidade, na.rm = TRUE)
+desvio <- sd(x = base$score_periculosidade, na.rm = TRUE)
+
+hist_score <- ggplot(data = base, 
+                     mapping = aes(x = base$score_periculosidade)) +
+  geom_histogram(aes(y = after_stat(density)), binwidth = 10) +
+  stat_function(fun = dnorm, 
+                args = list(mean = media, 
+                            sd = desvio), 
+                colour = "red") +
+  labs(y = "Densidade", x = "Score Periculosidade")
+
+# A visualização do histograma sugere uma distribuição ~normal
+hist_score
+
 # QQ-plot para avaliação visual da normalidade, mostrando praticamente todos os
 # pontos na faixa que indica tendência de normalidade
 ggqqplot(data = base$score_periculosidade)
+
+# Visualização da distribuição da score de periculosidade, indicando possível
+# distribuição ~normal, dada a simetria em relação a mediana
+ggplot(data = base, 
+       mapping = aes(y = score_periculosidade)) +
+  geom_boxplot() +
+  labs(y = "Score de periculosidade", x = "") +
+  theme_minimal()
 
 # Teste de Shapiro-Wilk para normalidade
 # H0: O score de periculosidade segue uma distribuição aproximadamente normal
@@ -82,17 +106,9 @@ shapiro.test(x = base$score_periculosidade)
 # Como p-valor 0.7738 > 0.05 nível de significância não rejeitamos H0, logo assumimos
 # que os scores de periculosidade possuem distribuição aproximadamente normal
 
-# Visualização da distribuição da score de periculosidade, indicando possível
-# distribuição ~normal, dada a simetria em relação a mediana
-ggplot(data = base, 
-       mapping = aes(y = score_periculosidade)) +
-  geom_boxplot() +
-  labs(y = "Score de periculosidade", x = "") +
-  theme_minimal()
-
 # Estimativa pontual igual a 174.5205, reforçando a possibilidade da média populacional
 # ser maior que 170
-mean(base$score_periculosidade, na.rm = TRUE)
+media
 
 # Teste t para uma média, no caso, 170
 # H0: μ = 170
@@ -116,7 +132,7 @@ epi.conf(dat = base$score_periculosidade,
 
 
 # -----------------------------------------------------------------------------------------
-# PERGUNTA 02 - O tempo médio de prisão entre homens e mulheres é igual?
+# QUESTÃO 02 - O tempo médio de prisão entre homens e mulheres é igual?
 # -----------------------------------------------------------------------------------------
 
 # Separação dos grupos
@@ -202,7 +218,7 @@ t.test(x = baseH$tempo_preso,
 # O tempo médio de prisão entre homens e mulheres pode ser considerado igual.
 
 # -----------------------------------------------------------------------------------------
-# PERGUNTA 03 - Existe correlação entre o tempo de prisão e o score de periculosidade
+# QUESTÃO 03 - Existe correlação entre o tempo de prisão e o score de periculosidade
 # -----------------------------------------------------------------------------------------
 
 # geom_point(): cria gráfico de dispersão entre duas variáveis numéricas
@@ -245,7 +261,7 @@ cor.test(x = base$tempo_preso,
 
 
 # -----------------------------------------------------------------------------------------
-# PERGUNTA 04 - Há relação entre o sexo e a reincidência dos indivíduos?
+# QUESTÃO 04 - Há relação entre o sexo e a reincidência dos indivíduos?
 # -----------------------------------------------------------------------------------------
 
 # Assumindo nível de significância de 5%
@@ -265,6 +281,18 @@ tabela <- base |>
 # Visualizando a tabela, observamos percentuais próximos de reincidentes e não
 # reincidentes ao variar o sexo, sugerindo independência entre as variáveis
 tabela
+
+# Gráfico de barras empilhadas com proporções mostra percentuais próximos de reincidentes e não
+# reincidentes ao variar o sexo, sugerindo independência entre as variáveis
+base |> 
+  ggplot(mapping = aes(x =sexo,
+                       fill = reincidente)) +
+  geom_bar(position = "fill") +
+  labs(x = "Sexo",
+       y = "Porcentagem",
+       fill = "Reincidente") +
+  scale_y_continuous(label = scales::percent) +
+  theme_classic()
 
 # Tabela de contingência
 tab <- table(base$sexo, base$reincidente)
