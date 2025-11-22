@@ -20,6 +20,7 @@ library(DescTools)  # Testes estatísticos adicionais
 library(vcd)        # Associação entre variáveis categóricas
 library(corrplot)   # Visualização de matrizes de correlação
 library(PerformanceAnalytics) # Gráficos de correlação e dispersão
+library(lmtest)     # Testes estatísticos para modelos lineares
 
 # ------------------------------------------------------------------------------
 # 1 - Importando e tratando a base de dados
@@ -409,8 +410,8 @@ summary(fit.model)
 # Seleção automática de variáveis pelo critério AIC
 step(fit.model)
 
-# Interpretação: Aplicando o critério AIC para a seleção de variáveis a partir do modelo ajustado, 
-# concluiu-se que as variáveis "idade" e "filhos" não contribuiam significativmente para a explicação do
+# Interpretação: Aplicando o critério AIC para a seleção de variáveis a partir do modelo anterior, 
+# concluiu-se que as variáveis "idade" e "filhos" não contribuiam significativamente para a explicação do
 # score de periculosidade. A remoção dessas variáveis contribuiu para um valor de AIC menor, que se traduz
 # em um maior equilíbrio entre ajuste e complexidade quando comparado ao modelo inicial com todas as variáveis.
 
@@ -425,7 +426,7 @@ best.model <- lm(formula = score_periculosidade ~ escolaridade + reincidente +
 # H1: os resíduos são heterocedásticos
 bptest(best.model)
 
-# Interpretação: Como o p-valor (0.4843) > nível de significânica (0.05), não rejeitamos H0, ou seja, 
+# Interpretação: Como o p-valor (0.4843) > nível de significância (0.05), não rejeitamos H0, ou seja, 
 # os resíduos satisfazem as condições de homocedasticidade.
 
 # Teste de normalidade dos resíduos (Shapiro-Wilk)
@@ -433,7 +434,7 @@ bptest(best.model)
 # H1: os resíduos não são normalmente distribuídos
 shapiro.test(best.model$residuals)
 
-# Interpretação: Como o p-valor (0.2037) > nível de significânica (0.05), não rejeitamos H0, ou seja, 
+# Interpretação: Como o p-valor (0.2037) > nível de significância (0.05), não rejeitamos H0, ou seja, 
 # os resíduos satisfazem as condições de normalidade.
 
 # Gráficos de diagnóstico do modelo
