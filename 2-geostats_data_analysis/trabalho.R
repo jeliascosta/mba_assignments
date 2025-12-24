@@ -23,6 +23,10 @@ ggplot(data = Glasgow) +
   geom_sf(fill = "white") +    # Preenche os bairros de branco
   theme_light()                # Define tema leve para visualização
 
+st_crs(x = Glasgow)                  # Mostra o CRS (sistema de coordenadas) do shapefile
+st_crs(x = Glasgow)$epsg             # Extrai apenas o código EPSG do CRS
+st_crs(x = Glasgow)$units            # Extrai a unidade de medida (ex: metros)
+
 # ======================================================================= #
 # ---------------------- IMPORTAÇÃO BASE DE DADOS ---------------------- #
 # ======================================================================= #
@@ -84,17 +88,18 @@ tm_shape(shp = glasgow_dados) +
 # -------------------------- QUESTÃO 3 ---------------------------------- #
 # ======================================================================= #
 
-# Criando matriz de vizinhança Queen (contiguidade por vértice ou lado)
-W.queen <- poly2nb(pl = glasgow_dados, 
-                   queen = TRUE)
+# Criando matriz de vizinhança Rook (contiguidade apenas por borda, não por vértice)
+# Consideramos que as bordas são linhas contínuas válidas
+W.rook <- poly2nb(pl = glasgow_dados, 
+                   queen = FALSE)
 
 # Calculando centroides de cada zona intermediária
 centroids <- st_centroid(x = glasgow_dados)
-
+?map_dfr
 # Criando linhas entre zonas intermediárias vizinhas
-nb_lines_queen <- map_dfr(1:length(W.queen), function(i) {
-  if (length(W.queen[[i]]) > 0) {
-    map_dfr(W.queen[[i]], function(j) {
+nb_lines_rook <- map_dfr(1:length(W.rook), function(i) {
+  if (length(W.rook[[i]]) > 0) {
+    map_dfr(W.rook[[i]], function(j) {
       coords_i <- st_coordinates(centroids[i, ])
       coords_j <- st_coordinates(centroids[j, ])
       st_sf(geometry = st_sfc(st_linestring(rbind(coords_i, coords_j)), crs = st_crs(glasgow_dados)))
@@ -102,22 +107,21 @@ nb_lines_queen <- map_dfr(1:length(W.queen), function(i) {
   }
 })
 
-# Visualizando vizinhança Queen
+# Visualizando vizinhança Rook
 ggplot() +
   geom_sf(data = glasgow_dados, fill = "white", color = "gray50") +   # Mapa base
-  geom_sf(data = nb_lines_queen, color = "red", size = 0.4, alpha = 0.6) +  # Linhas de vizinhança
+  geom_sf(data = nb_lines_rook, color = "red", size = 0.4, alpha = 0.6) +  # Linhas de vizinhança
   geom_sf(data = centroids, color = "blue", size = 1) +          # Centroides
   theme_minimal() +
-  labs(title = "Mapa de Vizinhança (Queen)", subtitle = "Conexões entre zonas intermediárias")
-
-# Criando objeto de pesos espaciais padronizado por linha
-recWQW <- nb2listw(neighbours = W.queen, style = "W", zero.policy = TRUE)
-recWQW$weights  # Verificando pesos
-
+  labs(title = "Mapa de Vizinhança (Rook)", subtitle = "Conexões entre zonas intermediárias")
 
 # ======================================================================= #
 # -------------------------- QUESTÃO 4 ---------------------------------- #
 # ======================================================================= #
+
+# Criando objeto de pesos espaciais padronizado por linha
+recWQW <- nb2listw(neighbours = W.rook, style = "W", zero.policy = TRUE)
+recWQW$weights  # Verificando pesos
 
 # Índice global de Moran (autocorrelação espacial)
 # H0: Independência ou aleatoriedade espacial (I = 0);
